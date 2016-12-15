@@ -28,6 +28,18 @@ impl PartialEq for Node {
 
 impl Ord for Node {
     fn cmp(&self, other: &Node) -> Ordering {
+        if self.hash == other.hash {
+            Ordering::Greater
+        }else if self.hash > other.hash {
+            Ordering::Greater
+        } else {
+            Ordering::Less
+        }
+    }
+}
+
+impl Node {
+    fn self_cmp(&self, other: &Node) -> Ordering {
         if self.hash >= other.hash {
             Ordering::Equal
         } else {
@@ -69,7 +81,7 @@ impl HashRing {
     }
 
     pub fn bake(&mut self) {
-        self.ticks.sort();
+        self.ticks.sort_by(|a, b| a.cmp(&b));
         self.length = self.ticks.len();
     }
 
@@ -78,19 +90,18 @@ impl HashRing {
         h.reset();
         h.update(s.as_bytes());
         let hash_bytes = h.digest().bytes();
-//        let v = (hash_bytes[19] | hash_bytes[18] << 8 | hash_bytes[17] << 16 | hash_bytes[16] << 24) as i32;
         let v = ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32;
 
         let _node = Node{hash: v, node: "".to_string()};
-//        let nd: &Node;
-        match self.ticks.binary_search_by(|v| v.cmp(&_node)) {
+        match self.ticks.binary_search_by(|v| v.self_cmp(&_node)) {
             Ok(i) => {
                 let nd = &self.ticks[i];
                 nd.node.clone()
             },
-            _ => {
-//                nd = &self.ticks[0];
-                panic!("failed binary search")
+            Err(_) => {
+                // idx == self.length occur, reset the idx to 0
+                let nd = &self.ticks[0];
+                nd.node.clone()
             }
         }
     }
@@ -119,7 +130,7 @@ fn bench() {
     ring.add("node5".to_string(), 1);
 
     ring.bake();
-    for i in 0..1000 {
-        println!("{}", ring.hash(i.to_string()));
+    for i in 20000..30000 {
+        println!("{} {}", i, ring.hash(i.to_string()));
     }
 }
