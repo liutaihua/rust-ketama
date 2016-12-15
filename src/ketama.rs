@@ -4,28 +4,30 @@ use std::cmp::{Ordering, Ord, Eq, PartialEq, PartialOrd};
 
 
 
-struct node {
+struct Node {
     node: String,
     hash: i32
 }
 
-impl Eq for node {
+impl Eq for Node {
 }
 
-impl PartialOrd for node {
-    fn partial_cmp(&self, other: &node) -> Option<Ordering> {
+#[allow(unused_variables)]
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Node) -> Option<Ordering> {
         None
     }
 }
 
-impl PartialEq for node {
-    fn eq(&self, other: &node) -> bool {
+#[allow(unused_variables)]
+impl PartialEq for Node {
+    fn eq(&self, other: &Node) -> bool {
         false
     }
 }
 
-impl Ord for node {
-    fn cmp(&self, other: &node) -> Ordering {
+impl Ord for Node {
+    fn cmp(&self, other: &Node) -> Ordering {
         if self.hash >= other.hash {
             Ordering::Equal
         } else {
@@ -34,16 +36,10 @@ impl Ord for node {
     }
 }
 
-//impl node {
-//    fn new(n: String, hash: i32) -> node {
-//
-//    }
-//}
-
-type TickArray = Vec<node>;
+type TickArray = Vec<Node>;
 
 pub struct HashRing {
-    defaultSpots: i32,
+    default_spots: i32,
     ticks: TickArray,
     length: usize
 }
@@ -52,22 +48,22 @@ pub struct HashRing {
 impl HashRing {
     pub fn new(n: i32) -> HashRing {
         let tk = Vec::new();
-        let h = HashRing{defaultSpots: n, ticks: tk, length: 0};
+        let h = HashRing{default_spots: n, ticks: tk, length: 0};
         h
     }
 
     pub fn add(&mut self, n: String, s: i32) {
-        let tSpots = self.defaultSpots * s;
+        let spots = self.default_spots * s;
         let mut hash = sha1::Sha1::new();
 
-        for i in 0..tSpots {
+        for i in 0..spots {
             hash.reset();
             let ts: String = i.to_string();
 
             let b = format!("{}:{}", n, ts);
             hash.update(b.as_bytes());
-            let hashBytes = hash.digest().bytes();
-            let _node = node{node: n.clone(), hash: (hashBytes[19] | hashBytes[18] << 8 | hashBytes[17] << 16 | hashBytes[16] << 24) as i32};
+            let hash_bytes = hash.digest().bytes();
+            let _node = Node{node: n.clone(), hash: ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32};
             self.ticks.push(_node);
         }
     }
@@ -81,10 +77,12 @@ impl HashRing {
         let mut h = sha1::Sha1::new();
         h.reset();
         h.update(s.as_bytes());
-        let hashBytes = h.digest().bytes();
-        let v = (hashBytes[19] | hashBytes[18] << 8 | hashBytes[17] << 16 | hashBytes[16] << 24) as i32;
-        let _node = node{hash: v, node: "".to_string()};
-        let nd: &node;
+        let hash_bytes = h.digest().bytes();
+//        let v = (hash_bytes[19] | hash_bytes[18] << 8 | hash_bytes[17] << 16 | hash_bytes[16] << 24) as i32;
+        let v = ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32;
+
+        let _node = Node{hash: v, node: "".to_string()};
+        let nd: &Node;
         match self.ticks.binary_search_by(|v| v.cmp(&_node)) {
             Ok(i) => {
                 nd = &self.ticks[i];
@@ -98,7 +96,29 @@ impl HashRing {
 }
 
 
-#[cfg(test)]
-mod tests {
+#[test]
+fn test_simple() {
+    let mut ring = HashRing::new(255);
+    ring.add("node1".to_string(), 1);
+    ring.add("node2".to_string(), 1);
+    ring.add("node3".to_string(), 1);
+    ring.bake();
+    let i = ring.hash("liutaihua".to_string());
+    println!("======= str: liutaihua, hash res:{:?} ========", i);
+}
 
+
+#[test]
+fn bench() {
+    let mut ring = HashRing::new(255);
+    ring.add("node1".to_string(), 1);
+    ring.add("node2".to_string(), 1);
+    ring.add("node3".to_string(), 1);
+    ring.add("node4".to_string(), 1);
+    ring.add("node5".to_string(), 1);
+
+    ring.bake();
+    for i in 0..1000 {
+        println!("{}", ring.hash(i.to_string()));
+    }
 }
