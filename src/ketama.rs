@@ -82,16 +82,17 @@ impl HashRing {
         let v = ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32;
 
         let _node = Node{hash: v, node: "".to_string()};
-        let nd: &Node;
+//        let nd: &Node;
         match self.ticks.binary_search_by(|v| v.cmp(&_node)) {
             Ok(i) => {
-                nd = &self.ticks[i];
+                let nd = &self.ticks[i];
+                nd.node.clone()
             },
             _ => {
-                nd = &self.ticks[0];
+//                nd = &self.ticks[0];
+                panic!("failed binary search")
             }
         }
-        nd.node.clone()
     }
 }
 
