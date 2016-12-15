@@ -6,7 +6,7 @@ use std::cmp::{Ordering, Ord, Eq, PartialEq, PartialOrd};
 
 struct Node {
     node: String,
-    hash: i32
+    hash: u32
 }
 
 impl Eq for Node {
@@ -75,7 +75,7 @@ impl HashRing {
             let b = format!("{}:{}", n, ts);
             hash.update(b.as_bytes());
             let hash_bytes = hash.digest().bytes();
-            let _node = Node{node: n.clone(), hash: ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32};
+            let _node = Node{node: n.clone(), hash: (hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24};
             self.ticks.push(_node);
         }
     }
@@ -90,7 +90,7 @@ impl HashRing {
         h.reset();
         h.update(s.as_bytes());
         let hash_bytes = h.digest().bytes();
-        let v = ((hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24) as i32;
+        let v = (hash_bytes[19] as u32) | (hash_bytes[18] as u32) << 8 | (hash_bytes[17] as u32) << 16 | (hash_bytes[16] as u32) << 24;
 
         let _node = Node{hash: v, node: "".to_string()};
         match self.ticks.binary_search_by(|v| v.self_cmp(&_node)) {
