@@ -13,7 +13,7 @@ Example
 
 ```rust
 extern crate ketama;
-use ketama::{HashRing};
+use ketama::ketama::{HashRing};
 
 fn main() {
     let mut ring = HashRing::new(255);
