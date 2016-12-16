@@ -2,10 +2,16 @@
 
 #### Usage
 
+Cargo toml
+
+```rust
 [dependencies.ketama]
 git = "https://github.com/liutaihua/rust-ketama"
+```
 
-<pre><code>
+Example
+
+```rust
 extern crate ketama;
 use ketama::{HashRing};
 
@@ -18,7 +24,7 @@ fn main() {
     let i = ring.hash("helloworld".to_string());
     println!("======= str: helloworld, hash res:{:?} ========", i);
 }
-</code></pre>
+```
 
 #### test
 cargo test
